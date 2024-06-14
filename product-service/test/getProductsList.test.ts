@@ -61,11 +61,11 @@ describe('getProductsList Handler', () => {
   it('should return a 500 error if JSON is invalid', async () => {
     process.env.PRODUCTS = 'invalid json';
 
-    const result: APIGatewayProxyResult = (await handler(
+    const result = (await handler(
       event,
       context,
       callback
-    )) as any;
+    )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(500);
     expect(JSON.parse(result.body)).toEqual({
