@@ -1,1 +1,1 @@
-export type HTTPHeaderMethods = 'GET' | 'POST' | 'OPTIONS';
+export type HTTPHeaderMethods = 'GET' | 'POST' | 'PUT';

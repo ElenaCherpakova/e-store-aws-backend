@@ -2,7 +2,6 @@ import { handler } from '../lambda/getProductsList';
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
-  Context,
 } from 'aws-lambda';
 import { IProducts } from '../types/products';
 
@@ -23,8 +22,6 @@ describe('getProductsList Handler', () => {
   ];
 
   const event = {} as APIGatewayProxyEvent;
-  const context = {} as Context;
-  const callback = () => {};
 
   beforeEach(() => {
     process.env.PRODUCTS = JSON.stringify(products);
@@ -37,8 +34,8 @@ describe('getProductsList Handler', () => {
   it('should return an array of products if they are available', async () => {
     const result = (await handler(
       event,
-      context,
-      callback
+      {} as any,
+      {} as any
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(200);
@@ -50,8 +47,8 @@ describe('getProductsList Handler', () => {
 
     const result = (await handler(
       event,
-      context,
-      callback
+      {} as any,
+      {} as any
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(200);
@@ -63,8 +60,8 @@ describe('getProductsList Handler', () => {
 
     const result = (await handler(
       event,
-      context,
-      callback
+      {} as any,
+      {} as any
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(500);
