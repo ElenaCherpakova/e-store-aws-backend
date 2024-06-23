@@ -4,7 +4,7 @@ info:
   description: API for managing products
   version: 1.0.0
 servers:
-  - url: https://hd0ff7po5m.execute-api.ca-central-1.amazonaws.com/prod/
+  - url: https://3oxl5ov7o4.execute-api.ca-central-1.amazonaws.com/prod/
 paths:
   /products:
     get:
@@ -19,6 +19,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+        500:
+          description: Internal server error
+    post:
+      summary: Create a product
+      description: Create a new product and add it into the database
+      requestBody:
+        description: Product to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProduct'
+      responses:
+        201:
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Invalid input
         500:
           description: Internal server error
   /products/{productId}:
@@ -60,3 +81,18 @@ components:
         price:
           type: number
           description: The product price
+    NewProduct:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The product title
+        description:
+          type: string
+          description: The product description
+        price:
+          type: number
+          description: The product price
+        count:
+          type: number
+          description: The count in stock
