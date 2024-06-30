@@ -15,7 +15,7 @@ describe('importProductsFile Lambda Function', () => {
     jest.clearAllMocks();
   });
 
-  it('should return 400 if name query params is missing', async () => {
+  it('should return 400 error and if name query params is missing', async () => {
     const event = { queryStringParameters: {} } as APIGatewayProxyEvent;
     const result = (await handler(
       event,
@@ -26,7 +26,7 @@ describe('importProductsFile Lambda Function', () => {
     expect(JSON.parse(result.body).message).toBe('The file name is required');
   });
 
-  it('should return 200 if the file data present and retrieve successfully', async () => {
+  it('should return 200 / signed URL return if the valid file provided and retrieve successfully', async () => {
     (getSignedUrl as jest.Mock).mockResolvedValue('url');
 
     const event = {
