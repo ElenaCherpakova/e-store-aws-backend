@@ -11,12 +11,23 @@ import {
   errorResponse,
   response,
 } from './helpers/handlerResponse';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { IStock } from '../types/stock';
+
+const PRODUCTS_TABLE = 'Products';
+const STOCKS_TABLE = 'Stocks';
+const AWS_REGION = 'ca-central-1';
+
+const dynamodbClient = new DynamoDBClient({
+  region: AWS_REGION,
+});
+const dynamoDbDocumentClient = DynamoDBDocumentClient.from(dynamodbClient);
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const products: IProducts[] = JSON.parse(process.env.PRODUCTS || '[]');
     const productId = event.pathParameters?.productId;
 
     if (!productId) {
@@ -25,17 +36,45 @@ export const handler: APIGatewayProxyHandler = async (
       });
     }
 
-    const product = products.find((p) => p.id === productId);
+    const productQueryParams = {
+      TableName: PRODUCTS_TABLE,
+      KeyConditionExpression: 'id = :productId',
+      ExpressionAttributeValues: {
+        ':productId': productId,
+      },
+    };
 
-    if (product) {
-      return successResponse(product);  // Return the single product object
+    const productQueryResult = await dynamoDbDocumentClient.send(
+      new QueryCommand(productQueryParams)
+    );
+
+    const product = productQueryResult.Items?.[0] as IProducts | undefined;
+    if (!product) {
+      return response(HttpStatus.NOT_FOUND, {
+        message: 'Product not found',
+      });
     }
 
-    return response(HttpStatus.NOT_FOUND, {
-      message: 'Product not found',
-    });
+    const stockQueryParams = {
+      TableName: STOCKS_TABLE,
+      KeyConditionExpression: 'product_id = :productId',
+      ExpressionAttributeValues: {
+        ':productId': productId,
+      },
+    };
+
+    const stockQueryResult = await dynamoDbDocumentClient.send(
+      new QueryCommand(stockQueryParams)
+    );
+    const stock = stockQueryResult.Items?.[0] as IStock | undefined;
+
+    const productWithStock = {
+      ...product,
+      count: stock?.count ?? 0,
+    };
+    return successResponse(productWithStock);
   } catch (err) {
-    console.log(err);
+    console.error('Error fetching product', err);
     return errorResponse({ message: 'Internal error' });
   }
 };

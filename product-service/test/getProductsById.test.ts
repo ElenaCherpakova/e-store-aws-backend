@@ -2,7 +2,6 @@ import { handler } from '../lambda/getProductsById';
 import {
   APIGatewayProxyResult,
   APIGatewayProxyEvent,
-  Context,
 } from 'aws-lambda';
 import { IProducts } from '../types/products';
 import { HttpStatus } from '../types/statusCodes';
@@ -16,9 +15,6 @@ describe('getProductsById Handler', () => {
     },
   ];
   
-  const context = {} as Context;
-  const callback = () => {};
-
   beforeEach(() => {
     process.env.PRODUCTS = JSON.stringify(products);
   });
@@ -36,8 +32,8 @@ describe('getProductsById Handler', () => {
 
     const result = (await handler(
       event,
-      context,
-      callback
+      {} as any,
+      {} as any
     )) as APIGatewayProxyResult;
     if (!result) return;
     expect(result.statusCode).toBe(HttpStatus.OK);
@@ -53,8 +49,8 @@ describe('getProductsById Handler', () => {
 
     const result = (await handler(
       event,
-      context,
-      callback
+      {} as any,
+      {} as any
     )) as APIGatewayProxyResult;
     if (!result) return;
     expect(result.statusCode).toBe(HttpStatus.NOT_FOUND);
