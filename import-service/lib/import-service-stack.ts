@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -16,7 +16,6 @@ export class ImportServiceStack extends cdk.Stack {
       'ImportBucket',
       'elena-shop-import-bucket'
     );
-
     // Define the Lambda function importProductsFile
     const importProductsFileLambda = new lambda.Function(
       this,
@@ -53,22 +52,35 @@ export class ImportServiceStack extends cdk.Stack {
       methodOptions
     );
 
+    // Define the SQS queue
+
+    const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn');
+    const catalogItemsQueue = sqs.Queue.fromQueueArn(
+      this,
+      'catalogItemsQueue',
+      catalogItemsQueueArn
+    );
+
     const importFileParser = new lambda.Function(this, 'importFileParser', {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
       handler: 'importFileParser.handler',
       environment: {
         BUCKET_NAME: importBucket.bucketName,
+        SQS_QUEUE_URL: catalogItemsQueue.queueUrl,
       },
     });
     importBucket.grantReadWrite(importFileParser);
+
+    // grant lambda function permission to send msg to the SQS queue
+    catalogItemsQueue.grantSendMessages(importFileParser);
 
     importBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(importFileParser),
       {
         prefix: 'uploaded/',
-      } 
+      }
     );
   }
 }
