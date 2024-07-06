@@ -51,9 +51,7 @@ export class ImportServiceStack extends cdk.Stack {
       new apigateway.LambdaIntegration(importProductsFileLambda),
       methodOptions
     );
-
-    // Define the SQS queue
-
+    // import catalogItemsQueueArn from product-service
     const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn');
     const catalogItemsQueue = sqs.Queue.fromQueueArn(
       this,
