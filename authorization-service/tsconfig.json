@@ -23,8 +23,6 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "outDir": "./dist",
-    "baseUrl": "./",
   },
   "exclude": [
     "node_modules",

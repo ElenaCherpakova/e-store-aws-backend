@@ -6,7 +6,6 @@
   },
   "scripts": {
     "build": "npm run clean && tsc",
-    "clean": "rimraf dist",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
