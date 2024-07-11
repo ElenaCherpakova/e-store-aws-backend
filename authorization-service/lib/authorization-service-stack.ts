@@ -11,15 +11,17 @@ export class AuthorizationServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const githubAccountLogin = process.env.GITHUB_ACCOUNT_LOGIN;
-    console.log("githubAccountLogin:", githubAccountLogin);
+    const githubAccountLogin = process.env.GITHUB_ACCOUNT_LOGIN!;
+    const secretKey = process.env[githubAccountLogin]!;
 
-    if (!githubAccountLogin) {
-      throw new Error('GITHUB_ACCOUNT_LOGIN environment variable is not defined');
+    if (!githubAccountLogin || !secretKey) {
+      throw new Error(
+        'GITHUB_ACCOUNT_LOGIN or Secret key environment variable is not defined'
+      );
     }
 
     const environment = {
-      [githubAccountLogin]: 'TEST_PASSWORD',
+      [githubAccountLogin]: secretKey,
     };
 
     const basicAuthorizer = new lambda.Function(this, 'BasicAuthorizer', {
@@ -29,7 +31,9 @@ export class AuthorizationServiceStack extends cdk.Stack {
       environment,
     });
 
-    basicAuthorizer.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
+    basicAuthorizer.grantInvoke(
+      new iam.ServicePrincipal('apigateway.amazonaws.com')
+    );
 
     new cdk.CfnOutput(this, 'BasicAuthorizerArn', {
       value: basicAuthorizer.functionArn,

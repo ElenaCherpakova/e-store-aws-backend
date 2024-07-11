@@ -19,7 +19,6 @@ export class ImportServiceStack extends cdk.Stack {
 
     // import BasicAuthorizerArn Lambda fn
     const basicAuthorizerArn = cdk.Fn.importValue('BasicAuthorizerArn');
-    console.log('BasicAuthorizerArn:', basicAuthorizerArn);
 
     const basicAuthorizer = lambda.Function.fromFunctionAttributes(
       this,
