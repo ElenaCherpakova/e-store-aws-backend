@@ -16,6 +16,20 @@ export class ImportServiceStack extends cdk.Stack {
       'ImportBucket',
       'elena-shop-import-bucket'
     );
+
+    // import BasicAuthorizerArn Lambda fn
+    const basicAuthorizerArn = cdk.Fn.importValue('BasicAuthorizerArn');
+    console.log('BasicAuthorizerArn:', basicAuthorizerArn);
+
+    const basicAuthorizer = lambda.Function.fromFunctionAttributes(
+      this,
+      'ImportedBasicAuthorizer',
+      {
+        functionArn: basicAuthorizerArn,
+        sameEnvironment: true
+      }
+    );
+
     // Define the Lambda function importProductsFile
     const importProductsFileLambda = new lambda.Function(
       this,
@@ -40,11 +54,51 @@ export class ImportServiceStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
+
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      'APIGatewayAuthorizer',
+      {
+        handler: basicAuthorizer,
+        identitySource: apigateway.IdentitySource.header('Authorization'),
+      }
+    );
+
+    const responseHeaders = {
+      'Access-Control-Allow-Origin': "'*'",
+      'Access-Control-Allow-Headers': "'*'",
+    };
+    // configure Gateway Response for 401 and 403 errors
+    api.addGatewayResponse('UnauthorizedResponse', {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      responseHeaders,
+      templates: {
+        'application/json': JSON.stringify({
+          message: 'Unauthorized',
+        }),
+      },
+      statusCode: '401',
+    });
+
+    api.addGatewayResponse('AccessDeniedResponse', {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      responseHeaders,
+      templates: {
+        'application/json': JSON.stringify({
+          message: 'Access Denied',
+        }),
+      },
+      statusCode: '403',
+    });
+
     const importProductsFileResource = api.root.addResource('import');
+
     const methodOptions: apigateway.MethodOptions = {
       requestParameters: {
         'method.request.querystring.name': true,
       },
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.CUSTOM,
     };
     importProductsFileResource.addMethod(
       'GET',
