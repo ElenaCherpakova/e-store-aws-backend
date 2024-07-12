@@ -19,7 +19,12 @@ export const handler: APIGatewayTokenAuthorizerHandler = async (
     if (!authHeader) {
       console.log('No auth header found.');
 
-      return generatePolicy('Unauthorized user', Effect.DENY, event.methodArn);
+      return generatePolicy(
+        'Unauthorized user',
+        Effect.DENY,
+        event.methodArn,
+        'Unauthorized'
+      );
     }
     const encodedCredentials = authHeader.split(' ')[1];
     const decodedCredentials = Buffer.from(
@@ -37,16 +42,22 @@ export const handler: APIGatewayTokenAuthorizerHandler = async (
       console.log('Credentials are valid.');
       return generatePolicy(username, Effect.ALLOW, event.methodArn);
     } else {
-      console.log('Invalid credentials.');
-      throw new Error('Invalid credentials');
+      console.log('Credentials are valid but access is forbidden.');
+      return generatePolicy(
+        username,
+        Effect.DENY,
+        event.methodArn,
+        'Forbidden'
+      );
     }
   } catch (error) {
     console.error('Error:', (error as Error).message);
 
     return generatePolicy(
-      (error as Error).message || 'Unauthorized user',
+      'Unauthorized user',
       Effect.DENY,
-      event.methodArn
+      event.methodArn,
+      'Unauthorized'
     );
   }
 };
